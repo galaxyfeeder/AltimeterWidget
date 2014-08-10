@@ -14,6 +14,6 @@ public class WidgetProvider extends AppWidgetProvider {
 	    Intent intent = new Intent(context.getApplicationContext(), UpdateWidgetService.class);
 
 	    // Update the widgets via the service
-	    context.startService(intent);		
+	    context.startService(intent);
 	}
 }

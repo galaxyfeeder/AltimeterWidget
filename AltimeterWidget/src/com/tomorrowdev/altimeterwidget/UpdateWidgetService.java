@@ -12,7 +12,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 public class UpdateWidgetService extends Service implements SensorEventListener{
@@ -58,13 +57,11 @@ public class UpdateWidgetService extends Service implements SensorEventListener{
 	public void onSensorChanged(SensorEvent event) {
 		if (event.sensor.getType() == Sensor.TYPE_PRESSURE) {
 
-			measures[numberOfMeasures] = event.values[1];
-			
-			Log.d("Measures", "Measure "+numberOfMeasures+": "+event.values[0]);
+			measures[numberOfMeasures] = event.values[0];
 			
 			numberOfMeasures++;
 			
-			if(numberOfMeasures == 4){
+			if(numberOfMeasures == 5){
 				
 				float mitjana = (measures[0]+measures[1]+measures[2]+measures[3]+measures[4])/5;
 				
@@ -78,10 +75,8 @@ public class UpdateWidgetService extends Service implements SensorEventListener{
 				for (int widgetId : allWidgetIds) {
 
 			    	RemoteViews remoteViews = new RemoteViews(this.getApplicationContext().getPackageName(), R.layout.widget_layout);
-			    	// Set the text
 			    	remoteViews.setTextViewText(R.id.altitude, ""+(int)h);
 
-			    	// Register an onClickListener
 			    	Intent clickIntent = new Intent(this.getApplicationContext(), WidgetProvider.class);
 
 			    	clickIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
@@ -90,6 +85,13 @@ public class UpdateWidgetService extends Service implements SensorEventListener{
 			    	PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, clickIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 			    	remoteViews.setOnClickPendingIntent(R.id.layout, pendingIntent);
 			    	appWidgetManager.updateAppWidget(widgetId, remoteViews);
+			    	
+			        Intent configIntent = new Intent(getApplicationContext(), PreferencesActivity.class);
+
+			        PendingIntent configPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, configIntent, 0);
+
+			        remoteViews.setOnClickPendingIntent(R.id.tools, configPendingIntent);
+			        appWidgetManager.updateAppWidget(widgetId, remoteViews);
 			    }
 				
 				stopSelf();
@@ -102,21 +104,15 @@ public class UpdateWidgetService extends Service implements SensorEventListener{
 		
 	}
 	
-	public float getMetersFromhPa(float hPa){
-		
-		float PSL = prefs.getFloat("PSL", 1013.25f);
-		
-		float hm = (float) (1 - Math.pow(hPa/PSL, 0.190284)*145366.45*0.3048);
-		
+	public float getMetersFromhPa(float hPa){		
+		float PSL = prefs.getFloat("PSL", 1013.25f);		
+		float hm = (float) (((1 - Math.pow(hPa/PSL, 0.190284))*145366.45)*0.3048);
 		return hm;
 	}
 	
-	public float getFeetsFromhPa(float hPa){
-		
-		float PSL = prefs.getFloat("PSL", 1013.25f);
-		
-		float halt = (float) (1 - Math.pow(hPa/PSL, 0.190284)*145366.45);
-		
+	public float getFeetsFromhPa(float hPa){		
+		float PSL = prefs.getFloat("PSL", 1013.25f);		
+		float halt = (float) ((1 - Math.pow(hPa/PSL, 0.190284))*145366.45);		
 		return halt;
 	}
 }
